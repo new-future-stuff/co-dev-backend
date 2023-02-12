@@ -6,14 +6,10 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.8"
-Django = "^4.1.6"
-djangorestframework = "^3.14.0"
-django-cors-headers = "^3.13.0"
-
-[tool.poetry.dev-dependencies]
-django-stubs = "^1.14.0"
-django-stubs-ext = "^0.7.0"
-djangorestframework-stubs = "^1.8.0"
+fastapi = "^0.91.0"
+tortoise-orm = {extras = ["asyncpg"], version = "^0.19.3"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
