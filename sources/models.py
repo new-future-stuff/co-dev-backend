@@ -1,5 +1,7 @@
+import tortoise
 from tortoise.models import Model
 from tortoise import fields
+import asyncio
 
 
 class Skill(Model):
@@ -9,11 +11,12 @@ class Skill(Model):
 
 class User(Model):
     id = fields.IntField(pk=True)
-    hashed_password = fields.TextField()
-    password_hash_salt = fields.TextField()
+    hashed_password = fields.BinaryField()
+    password_hash_salt = fields.BinaryField()
     textual_id = fields.TextField(unique=True)
     name = fields.TextField()
     skills = fields.ManyToManyField("models.Skill", related_name="users")
+    join_date = fields.DatetimeField()
 
 
 class Project(Model):
@@ -32,11 +35,26 @@ class ProjectLike(Model):
     receiver = fields.ForeignKeyField("models.User", related_name="received_likes")
 
 
-class TokenType(Model):
-    id = fields.IntField(pk=True)
-    name = fields.TextField()
-
-
 class Token(Model):
-    access_token = fields.TextField()
-    type = fields.ForeignKeyField("models.TokenType", related_name="tokens")
+    contents = fields.TextField()
+    owner = fields.ForeignKeyField("models.User")
+    expiration_time = fields.DatetimeField()
+
+
+async def init():
+    await tortoise.Tortoise.init(
+        {
+            "connections": {
+                "default": {
+                    "engine": "tortoise.backends.sqlite",
+                    "credentials": {"file_path": "db.sqlite3"},
+                }
+            },
+            "apps": {
+                "events": {"models": ["__main__"], "default_connection": "default"}
+            },
+        }
+    )
+
+
+asyncio.run(init())
