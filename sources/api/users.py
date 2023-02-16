@@ -40,22 +40,12 @@ class UserData(BaseModel):
     email: str
 
 
-def _skills_not_found():
-    return HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail={"type": "the specified skills are not found"},
-    )
-
-
 async def create_telegram_user(name: str, telegram_id: int):
-    try:
-        user = await User.create(
-            name=name,
-            skills=[],
-            join_date=datetime.datetime.now(),
-        )
-    except IntegrityError:
-        raise _skills_not_found()
+    user = await User.create(
+        name=name,
+        skills=[],
+        join_date=datetime.datetime.now(),
+    )
     try:
         await TelegramUserData(telegram_id=telegram_id, user=user)
     except IntegrityError:
@@ -68,14 +58,11 @@ async def create_telegram_user(name: str, telegram_id: int):
 @router.post("/users")
 async def create_website_user(user: UserData):
     salt = token_bytes(16)
-    try:
-        user_record = await User.create(
-            name=user.name,
-            skills=[],
-            join_date=datetime.datetime.now(),
-        )
-    except IntegrityError:
-        raise _skills_not_found()
+    user_record = await User.create(
+        name=user.name,
+        skills=[],
+        join_date=datetime.datetime.now(),
+    )
     try:
         await WebsiteUserData(
             hashed_password=encrypt_password(user.password, salt),

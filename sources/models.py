@@ -32,6 +32,7 @@ class Project(Model):
     id = fields.IntField(pk=True)
     creator = fields.ForeignKeyField("models.User", related_name="created_projects")
     name = fields.TextField()
+    required_skills = fields.ManyToManyField("models.Skill")
 
 
 class UserLike(Model):

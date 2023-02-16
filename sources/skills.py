@@ -14,5 +14,9 @@ async def create_skill(skill_name: str) -> models.Skill:
     return await models.Skill.create(name=skill_name)
 
 
-async def get_skill(skill_name: str) -> Optional[models.Skill]:
-    return await models.Skill.get(name=skill_name)
+async def delete_skill(skill: models.Skill):
+    await skill.delete()
+
+
+async def get_skills(skill_names: List[str]) -> Optional[models.Skill]:
+    return await models.Skill.get(name__in=skill_names)
