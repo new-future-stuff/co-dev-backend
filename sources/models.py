@@ -11,12 +11,21 @@ class Skill(Model):
 
 class User(Model):
     id = fields.IntField(pk=True)
-    hashed_password = fields.BinaryField()
-    password_hash_salt = fields.BinaryField()
-    textual_id = fields.TextField(unique=True)
     name = fields.TextField()
     skills = fields.ManyToManyField("models.Skill", related_name="users")
     join_date = fields.DatetimeField()
+
+
+class WebsiteUserData(Model):
+    user = fields.ForeignKeyRelation("models.User", related_name="website_profile")
+    hashed_password = fields.BinaryField()
+    password_hash_salt = fields.BinaryField()
+    email = fields.TextField(unique=True)
+
+
+class TelegramUserData(Model):
+    user = fields.ForeignKeyRelation("models.User", related_name="telegram_profile")
+    telegram_id = fields.IntField(unique=True)
 
 
 class Project(Model):

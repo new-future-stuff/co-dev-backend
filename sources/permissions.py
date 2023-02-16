@@ -12,8 +12,13 @@ def only_for_authorized_users(f):
     async def checker(request: Request, *args, **kwargs):
         token = request.cookies["Token"]
         try:
-            token = await Token.get(contents=token, expiration_time__lte=datetime.datetime.now()).prefetch_related("owner")
+            token = await Token.get(
+                contents=token,
+                expiration_time__lte=datetime.datetime.now()
+            ).prefetch_related("owner")
         except DoesNotExist:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
         return await f(request, *args, user=token.owner, **kwargs)
     return checker

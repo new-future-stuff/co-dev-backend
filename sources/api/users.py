@@ -1,11 +1,11 @@
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from secrets import token_bytes
 import datetime
 from tortoise.exceptions import IntegrityError
 
-from sources.models import User
+from sources.models import TelegramUserData, User, WebsiteUserData
 from sources.secrets import encrypt_password
 
 
@@ -17,7 +17,6 @@ async def list_users():
     return [
         {
             "id": user.id,
-            "textual_id": user.textual_id,
             "name": user.name,
             "join_date": user.join_date,
         }
@@ -29,7 +28,6 @@ async def list_users():
 async def get_user(user_id: int):
     user = await User.get(pk=user_id).prefetch_related("skills")
     return {
-        "textual_id": user.textual_id,
         "name": user.name,
         "skills": [{"name": skill.name} for skill in user.skills],
         "join_date": user.join_date,
@@ -39,21 +37,54 @@ async def get_user(user_id: int):
 class UserData(BaseModel):
     name: str
     password: str
-    textual_id: str
-    skill_ids: List[int]
+    email: str
 
 
-@router.post("/users")
-async def create_user(user: UserData):
-    salt = token_bytes(16)
+def _skills_not_found():
+    return HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail={"type": "the specified skills are not found"},
+    )
+
+
+async def create_telegram_user(name: str, telegram_id: int):
     try:
-        await User.create(
-            hashed_password=encrypt_password(user.password, salt),
-            password_hash_salt=salt,
-            textual_id=user.textual_id,
-            name=user.name,
-            skills=user.skill_ids,
+        user = await User.create(
+            name=name,
+            skills=[],
             join_date=datetime.datetime.now(),
         )
     except IntegrityError:
+        raise _skills_not_found()
+    try:
+        await TelegramUserData(telegram_id=telegram_id, user=user)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"type": "telegram id already taken"}
+        )
 
+
+@router.post("/users")
+async def create_website_user(user: UserData):
+    salt = token_bytes(16)
+    try:
+        user_record = await User.create(
+            name=user.name,
+            skills=[],
+            join_date=datetime.datetime.now(),
+        )
+    except IntegrityError:
+        raise _skills_not_found()
+    try:
+        await WebsiteUserData(
+            hashed_password=encrypt_password(user.password, salt),
+            password_hash_salt=salt,
+            email=user.email,
+            user=user_record,
+        )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"type": "email already taken"},
+        )
