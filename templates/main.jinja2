@@ -2,12 +2,17 @@
 <html>
     <body>
         <h1>co-dev</h1>
-        <form action="/static/authentication.html">
+        <form action="/authentication">
             <input type="submit" value="Войти в систему" />
         </form>
-        <form action="/static/registration.html">
+        <form action="/registration">
             <input type="submit" value="Зарегистрироваться" />
         </form>
+        {% if user %}
+            <form action="/skills">
+                <input type="submit" value="Указать навыки" />
+            </form>
+        {% endif %}
         <p>Лендинг здесь и ниже</p>
     </body>
 </html>
